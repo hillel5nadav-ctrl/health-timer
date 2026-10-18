@@ -6,16 +6,16 @@
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 96; // r = 96 -> ~603.185
 
-// הגדרות שני הטיימרים העצמאיים
+// הגדרות שני הטיימרים העצמאיים (מתחילים במצב המתנה 'idle' עד ללחיצה על "התחל טיימר")
 const timers = {
     short: {
         id: 'short',
         title: 'עצירה והתרוממות (15 דקות)',
         defaultSublabel: 'נותרו להתרוממות',
         durationSec: 15 * 60, // 15 דקות
-        startTimeMs: Date.now(),
+        startTimeMs: null,
         elapsedSecWhenPaused: 0,
-        state: 'running', // 'running' | 'alerting' | 'paused'
+        state: 'idle', // 'idle' | 'running' | 'alerting' | 'paused'
         lastSoundPlayedAt: 0
     },
     long: {
@@ -23,9 +23,9 @@ const timers = {
         title: 'קימה והתאווררות (40 דקות)',
         defaultSublabel: 'נותרו להתאווררות',
         durationSec: 40 * 60, // 40 דקות
-        startTimeMs: Date.now(),
+        startTimeMs: null,
         elapsedSecWhenPaused: 0,
-        state: 'running', // 'running' | 'alerting' | 'paused'
+        state: 'idle', // 'idle' | 'running' | 'alerting' | 'paused'
         lastSoundPlayedAt: 0
     }
 };
@@ -99,10 +99,22 @@ function formatTime(totalSeconds) {
  * חישוב הזמן שחלף בשניות עבור טיימר נתון
  */
 function getElapsedSeconds(timer) {
+    if (timer.state === 'idle' || !timer.startTimeMs) {
+        return 0;
+    }
     if (timer.state === 'paused') {
         return timer.elapsedSecWhenPaused;
     }
     return (Date.now() - timer.startTimeMs) / 1000;
+}
+
+/**
+ * פעולה: לחיצה על "התחל טיימר" (מפעילה את שני הטיימרים)
+ */
+function startTimers() {
+    ensureAudioContext();
+    sitDown('short');
+    sitDown('long');
 }
 
 /**
@@ -111,7 +123,7 @@ function getElapsedSeconds(timer) {
 function standUp(timerKey) {
     ensureAudioContext();
     const timer = timers[timerKey];
-    if (!timer || timer.state === 'paused') return;
+    if (!timer || timer.state === 'paused' || timer.state === 'idle') return;
 
     timer.elapsedSecWhenPaused = getElapsedSeconds(timer);
     timer.state = 'paused';
@@ -173,7 +185,7 @@ function tick() {
     const now = Date.now();
 
     Object.values(timers).forEach((timer) => {
-        if (timer.state === 'paused') return;
+        if (timer.state === 'paused' || timer.state === 'idle') return;
 
         const elapsedSec = getElapsedSeconds(timer);
         if (elapsedSec >= timer.durationSec) {
@@ -204,6 +216,7 @@ function updateUI() {
     const alertingTimers = [];
     let runningCount = 0;
     let pausedCount = 0;
+    let idleCount = 0;
 
     Object.values(timers).forEach((timer) => {
         const key = timer.id;
@@ -228,10 +241,21 @@ function updateUI() {
 
         // איפוס מחלקות מצב
         cardEl.classList.remove('is-alerting', 'is-paused');
-        statusEl.classList.remove('state-running', 'state-alert', 'state-paused');
+        statusEl.classList.remove('state-running', 'state-alert', 'state-paused', 'state-idle');
         ringEl.classList.remove('ring-alert', 'ring-paused');
 
-        if (timer.state === 'running') {
+        if (timer.state === 'idle') {
+            idleCount++;
+            statusEl.textContent = 'ממתין להפעלה';
+            statusEl.classList.add('state-idle');
+
+            timeEl.textContent = formatTime(timer.durationSec);
+            overtimeEl.classList.add('hidden');
+            sublabelEl.textContent = 'לחץ על "התחל טיימר" כדי להתחיל';
+
+            standBtn.disabled = true;
+            sitBtn.disabled = true;
+        } else if (timer.state === 'running') {
             runningCount++;
             statusEl.textContent = 'בזמן ישיבה';
             statusEl.classList.add('state-running');
@@ -307,11 +331,15 @@ function updateUI() {
     // עדכון סרגל שליטה מרכזי
     const masterDot = document.getElementById('master-status-dot');
     const masterText = document.getElementById('master-status-text');
+    const startTimerBtn = document.getElementById('start-timer-btn');
     const masterStandBtn = document.getElementById('master-stand-btn');
     const masterSitBtn = document.getElementById('master-sit-btn');
 
-    masterDot.classList.remove('dot-alert', 'dot-paused');
-    if (alertingTimers.length > 0) {
+    masterDot.classList.remove('dot-alert', 'dot-paused', 'dot-idle');
+    if (idleCount === 2) {
+        masterDot.classList.add('dot-idle');
+        masterText.textContent = 'ממתין ללחיצה על "התחל טיימר"';
+    } else if (alertingTimers.length > 0) {
         masterDot.classList.add('dot-alert');
         masterText.textContent = 'התראה פעילה! הטיימר ממשיך לרוץ עד ללחיצה על "קמתי"';
     } else if (pausedCount === 2) {
@@ -324,10 +352,12 @@ function updateUI() {
         masterText.textContent = 'שני הטיימרים פעילים וסופרים לאחור ברקע';
     }
 
-    // כפתור "קמתי" הראשי זמין אם לפחות טיימר אחד אינו עצור
-    masterStandBtn.disabled = pausedCount === 2;
-    // כפתור "חזרתי לשבת" הראשי תמיד זמין לאיפוס והתחלה מחדש
-    masterSitBtn.disabled = false;
+    // כפתור "התחל טיימר" זמין כאשר הטיימרים במצב המתנה התחלתי
+    startTimerBtn.disabled = idleCount === 0;
+    // כפתור "קמתי" הראשי זמין אם לפחות טיימר אחד רץ או מתריע
+    masterStandBtn.disabled = (runningCount + alertingTimers.length) === 0;
+    // כפתור "חזרתי לשבת" הראשי זמין לאחר שהטיימר הופעל לפחות פעם אחת
+    masterSitBtn.disabled = idleCount === 2;
 }
 
 /**
@@ -358,6 +388,9 @@ function startBackgroundTicker() {
 
 // חיבור אירועים לכפתורים בעת טעינת הדף
 document.addEventListener('DOMContentLoaded', () => {
+    // כפתור "התחל טיימר" חדש
+    document.getElementById('start-timer-btn').addEventListener('click', startTimers);
+
     // כפתורי טיימר קצר (15 דקות)
     document.getElementById('stand-short-btn').addEventListener('click', () => standUp('short'));
     document.getElementById('sit-short-btn').addEventListener('click', () => sitDown('short'));
@@ -425,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, { once: true });
 
-    // אתחול ראשוני והפעלת הטיימרים ברקע
+    // אתחול ראשוני (במצב המתנה עד ללחיצה על "התחל טיימר")
     updateUI();
     startBackgroundTicker();
 });

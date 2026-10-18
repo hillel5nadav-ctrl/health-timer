@@ -50,14 +50,17 @@
         <!-- סרגל שליטה מרכזי לשני הטיימרים יחד -->
         <section class="master-controls-bar">
             <div class="master-info">
-                <span class="status-dot" id="master-status-dot"></span>
-                <span id="master-status-text">הטיימרים פעילים וסופרים לאחור</span>
+                <span class="status-dot dot-idle" id="master-status-dot"></span>
+                <span id="master-status-text">ממתין ללחיצה על "התחל טיימר"</span>
             </div>
             <div class="master-buttons">
-                <button id="master-stand-btn" class="btn btn-stand">
+                <button id="start-timer-btn" class="btn btn-start">
+                    <span>▶️</span> התחל טיימר
+                </button>
+                <button id="master-stand-btn" class="btn btn-stand" disabled>
                     <span>🚶‍♂️</span> קמתי (עצור את שני הטיימרים)
                 </button>
-                <button id="master-sit-btn" class="btn btn-sit">
+                <button id="master-sit-btn" class="btn btn-sit" disabled>
                     <span>🪑</span> חזרתי לשבת (אפס והתחל הכל מחדש)
                 </button>
             </div>
@@ -69,7 +72,7 @@
             <article id="card-short" class="timer-card" data-timer="short">
                 <div class="card-header">
                     <div class="timer-type-badge badge-short">טיימר קצר · 15 דקות</div>
-                    <span id="status-short" class="timer-state-pill state-running">בזמן ישיבה</span>
+                    <span id="status-short" class="timer-state-pill state-idle">ממתין להפעלה</span>
                 </div>
 
                 <h2 class="timer-title">עצירה והתרוממות</h2>
@@ -84,13 +87,13 @@
                     <div class="timer-readout">
                         <div id="time-short" class="time-digits">15:00</div>
                         <div id="overtime-short" class="overtime-label hidden">זמן חריגה: +00:00</div>
-                        <div id="sublabel-short" class="time-sublabel">נותרו להתרוממות</div>
+                        <div id="sublabel-short" class="time-sublabel">לחץ על "התחל טיימר" כדי להתחיל</div>
                     </div>
                 </div>
 
                 <!-- כפתורי פעולה לטיימר הקצר -->
                 <div class="card-actions">
-                    <button id="stand-short-btn" class="btn btn-stand btn-full">
+                    <button id="stand-short-btn" class="btn btn-stand btn-full" disabled>
                         <span>🚶‍♂️</span> קמתי
                     </button>
                     <button id="sit-short-btn" class="btn btn-sit btn-full" disabled>
@@ -109,7 +112,7 @@
             <article id="card-long" class="timer-card" data-timer="long">
                 <div class="card-header">
                     <div class="timer-type-badge badge-long">טיימר ארוך · 40 דקות</div>
-                    <span id="status-long" class="timer-state-pill state-running">בזמן ישיבה</span>
+                    <span id="status-long" class="timer-state-pill state-idle">ממתין להפעלה</span>
                 </div>
 
                 <h2 class="timer-title">קימה והתאווררות</h2>
@@ -124,13 +127,13 @@
                     <div class="timer-readout">
                         <div id="time-long" class="time-digits">40:00</div>
                         <div id="overtime-long" class="overtime-label hidden">זמן חריגה: +00:00</div>
-                        <div id="sublabel-long" class="time-sublabel">נותרו להתאווררות</div>
+                        <div id="sublabel-long" class="time-sublabel">לחץ על "התחל טיימר" כדי להתחיל</div>
                     </div>
                 </div>
 
                 <!-- כפתורי פעולה לטיימר הארוך -->
                 <div class="card-actions">
-                    <button id="stand-long-btn" class="btn btn-stand btn-full">
+                    <button id="stand-long-btn" class="btn btn-stand btn-full" disabled>
                         <span>🚶‍♂️</span> קמתי
                     </button>
                     <button id="sit-long-btn" class="btn btn-sit btn-full" disabled>

@@ -233,6 +233,11 @@ body {
     box-shadow: 0 0 10px var(--stand-color);
 }
 
+.status-dot.dot-idle {
+    background-color: var(--long-color);
+    box-shadow: 0 0 10px var(--long-color);
+}
+
 @keyframes blinkDot {
     from { opacity: 0.4; transform: scale(0.9); }
     to { opacity: 1; transform: scale(1.25); }
@@ -354,6 +359,11 @@ body {
 .state-paused {
     background: rgba(245, 158, 11, 0.2);
     color: #fcd34d;
+}
+
+.state-idle {
+    background: rgba(56, 189, 248, 0.16);
+    color: #7dd3fc;
 }
 
 .timer-title {
@@ -485,6 +495,18 @@ body {
     cursor: not-allowed;
     transform: none !important;
     box-shadow: none !important;
+}
+
+.btn-start {
+    background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4);
+}
+
+.btn-start:hover:not(:disabled) {
+    background: linear-gradient(135deg, #7dd3fc 0%, #3b82f6 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(56, 189, 248, 0.55);
 }
 
 .btn-stand {
